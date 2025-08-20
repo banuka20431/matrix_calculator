@@ -271,7 +271,7 @@ float get_determinater(float matrix[][MAX_SIZE], int size)
     {
         return matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0];
     }
-    
+
     float matrix_t[MAX_SIZE][MAX_SIZE];
     int next_col, next_row, selected_row = 0;
 
@@ -280,17 +280,17 @@ float get_determinater(float matrix[][MAX_SIZE], int size)
         next_row = 0;
         for(int i = 0; i < size; i++) {
             if(selected_row == i) continue;
-            next_col = 0; 
+            next_col = 0;
             for(int k = 0; k < size; k++) {
                 if(selected_col == k) continue;
-                matrix_t[next_row][next_col++] = matrix[i][k]; 
+                matrix_t[next_row][next_col++] = matrix[i][k];
             }
-            next_row++;   
-        }   
+            next_row++;
+        }
         float sign = pow(-1, (double)(selected_row + selected_col));
-        det += sign * matrix[selected_row][selected_col] * get_determinater(matrix_t, size-1);         
+        det += sign * matrix[selected_row][selected_col] * get_determinater(matrix_t, size-1);
     }
-    
+
     return det;
 }
 
@@ -307,36 +307,36 @@ void invert(float matrix[][MAX_SIZE], float inverse_matrix[][MAX_SIZE], int size
 
 void divid(float matrix_1[][MAX_SIZE], float matrix_2[][MAX_SIZE], float answer_matrix[][MAX_SIZE], int size)
 {
-    float adjoint_matrix[MAX_SIZE][MAX_SIZE];
-    get_adjoint_matrix(matrix_2, adjoint_matrix, size);
-    multiply(matrix_1, adjoint_matrix, answer_matrix, size, size);
+    float inverse_matrix[MAX_SIZE][MAX_SIZE];
+    invert(matrix_2, inverse_matrix, size);
+    multiply(matrix_1, inverse_matrix, answer_matrix, size, size);
 }
 
 void get_adjoint_matrix(float matrix[][MAX_SIZE], float adjoint_matrix[][MAX_SIZE], int size) {
     float cofactor_matrix[MAX_SIZE][MAX_SIZE];
-    float inverse_matrix[MAX_SIZE][MAX_SIZE];
 
     get_cofactor_matrix(matrix, cofactor_matrix, size);
-    get_transpose(cofactor_matrix, inverse_matrix, size);
 
-    adjoint_matrix = inverse_matrix;
+    get_transpose(cofactor_matrix, cofactor_matrix, size);
+
+    adjoint_matrix = cofactor_matrix;
 }
 
 void get_cofactor_matrix(float matrix[][MAX_SIZE], float cofactor_matrix[][MAX_SIZE], int size) {
-    
+
     float matrix_t[size - 1][size - 1];
     float element_value;
- 
+
     for(int i = 0; i < size; i++) {
         for(int j = 0; j < size; j++) {
 
             for(int row = 0; row < size; row++) {
 
                 if(row == i) continue;
-                
+
                 for(int col = 0; col < size; col++) {
                     if(col == j) continue;
-                    
+
                     if (size == 2) {
                         cofactor_matrix[i][j] = matrix[row][col] * pow(-1, i + j);
                     } else {
@@ -348,17 +348,17 @@ void get_cofactor_matrix(float matrix[][MAX_SIZE], float cofactor_matrix[][MAX_S
             if (size > 2) {
                 cofactor_matrix[i][j] = matrix[i][j] * get_determinater(matrix, size) * pow(-1, i + j);
             }
-            
-        }   
+
+        }
     }
-    
+
 }
 
 void get_transpose(float matrix[][MAX_SIZE], float transpose_matrix[][MAX_SIZE], int size) {
     for(int i = 0; i < size; i++) {
         for(int j = 0; j < size; j++) {
             transpose_matrix[i][j] = matrix[j][i];
-        }   
+        }
     }
 }
 
@@ -544,16 +544,16 @@ int main()
         print_matrix(answer_matrices[0], rows[0], rows[0]);
         break;
     }
-    
-    case DETERMINENT: 
+
+    case DETERMINENT:
     {
         printf("\nDeterminent value: %.2f", get_determinater(matrices[0], rows[0]));
     }
-    
+
     case ADJOINT:
     {
         float adjoint_matrix[MAX_SIZE][MAX_SIZE];
-        
+
         if (rows[0] != cols[0])
         {
                 printf("\n(!) Ajoint can be calculated only for squre matrices");
@@ -564,13 +564,13 @@ int main()
 
         printf("\nAnswer: ");
         print_matrix(adjoint_matrix, rows[0], cols[0]);
-        break;  
+        break;
     }
-    
+
     case INVERSE:
     {
         float inverse_matrix[MAX_SIZE][MAX_SIZE];
-        
+
         if (rows[0] != cols[0])
         {
                 printf("\n(!) Inverse can be calculated only for squre matrices");
@@ -581,7 +581,7 @@ int main()
 
         printf("\nAnswer: ");
         print_matrix(inverse_matrix, rows[0], cols[0]);
-        break;  
+        break;
     }
     }
 
