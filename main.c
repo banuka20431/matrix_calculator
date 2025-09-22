@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <CUnit/CUnit.h>
+#include <CUnit/Basic.h>
 
 #define MAX_SIZE 128
 #define MAX_MATRICES 10
@@ -25,7 +27,7 @@ double scale_to_below_10(float n);
 int calculate_spaces(float arr[][MAX_SIZE], int rows, int cols);
 void print_matrix(float matrix[][MAX_SIZE], int rows, int cols);
 
-float get_determinater(float matrix[][MAX_SIZE], int size);
+float get_determinant(float matrix[][MAX_SIZE], int size);
 void get_cofactor_matrix(float matrix[][MAX_SIZE], float cofactor_matrix[][MAX_SIZE], int size);
 void get_transpose(float matrix[][MAX_SIZE], float transpose_matrix[][MAX_SIZE], int size);
 void get_adjoint_matrix(float matrix[][MAX_SIZE], float adjoint_matrix[][MAX_SIZE], int size);
@@ -40,6 +42,65 @@ float scalar_divid(float scalar, float idx_value);
 
 void calculate(float matrix_1[][MAX_SIZE], float matrix_2[][MAX_SIZE], float answer_matrix[][MAX_SIZE], int size, float (*func)(float val_1, float val_2));
 void calculate_wscalar(float matrix_1[][MAX_SIZE], float scalar, float answer_matrix[][MAX_SIZE], int size, float (*func)(float val_1, float val_2));
+
+void test_add(void);
+void test_subtract(void);
+void test_multiply(void);
+void test_get_determinant(void);
+
+void test_add() {
+   float matrix_1[MAX_SIZE][MAX_SIZE] = {{1, 2, 3}, {1, 2, 3}, {1, 2, 3}};
+   float matrix_2[MAX_SIZE][MAX_SIZE] = {{1, 2, 3}, {1, 2, 3}, {1, 2, 3}};
+
+   float actual[MAX_SIZE][MAX_SIZE];
+
+   float expected[MAX_SIZE][MAX_SIZE] = {{2, 4, 6}, {2, 4, 6}, {2, 4, 6}};
+   calculate(matrix_1, matrix_2, actual, 3, &add);
+
+    for(int i = 0; i < 3; i++) {
+             for(int j = 0; j < 3; j++) {
+                CU_ASSERT_EQUAL(actual[i][j], expected[i][j]);
+        }
+   }
+}
+
+void test_subtract() {
+   float matrix_1[MAX_SIZE][MAX_SIZE] = {{1, 2, 3}, {1, 2, 3}, {1, 2, 3}};
+   float matrix_2[MAX_SIZE][MAX_SIZE] = {{1, 2, 3}, {1, 2, 3}, {1, 2, 3}};
+
+   float actual[MAX_SIZE][MAX_SIZE];
+
+   float expected[MAX_SIZE][MAX_SIZE] = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
+   calculate(matrix_1, matrix_2, actual, 3, &subtract);
+
+    for(int i = 0; i < 3; i++) {
+             for(int j = 0; j < 3; j++) {
+                CU_ASSERT_EQUAL(actual[i][j], expected[i][j]);
+        }
+   }
+}
+
+void test_multiply() {
+   float matrix_1[MAX_SIZE][MAX_SIZE] = {{1, 2}, {3, 4}};
+   float matrix_2[MAX_SIZE][MAX_SIZE] = {{5, 6}, {7, 8}};
+
+   float actual[MAX_SIZE][MAX_SIZE];
+
+   float expected[MAX_SIZE][MAX_SIZE] = {{19, 22}, {43, 50}};
+   multiply(matrix_1, matrix_2, actual, 3, 3);
+
+    for(int i = 0; i < 3; i++) {
+             for(int j = 0; j < 3; j++) {
+                CU_ASSERT_EQUAL(actual[i][j], expected[i][j]);
+        }
+   }
+}
+
+void test_get_determinant() {
+        float matrix[MAX_SIZE][MAX_SIZE] = {{2, 5, 1, 4}, {3, 6, 0, 7}, {1, 7, 2, 5}, {4, 8, 3, 6}};
+        float answer = 24;
+        CU_ASSERT_EQUAL(get_determinant(matrix, 4), answer);
+}
 
 
 void get_matrix(float matrix[][MAX_SIZE], int rows, int cols)
@@ -76,6 +137,7 @@ int calculate_spaces(float arr[][MAX_SIZE], int rows, int cols)
             max_pow_val = max_pow_val < power ? power : max_pow_val;
         }
     }
+
     return (int)max_pow_val + 3; // add three for 3 characters representing the floating point and 2 decimal places
 }
 
@@ -83,15 +145,17 @@ void print_matrix(float matrix[][MAX_SIZE], int rows, int cols)
 {
     printf("\n\n");
     int max_spaces = calculate_spaces(matrix, rows, cols);
+
     for (int row = 0; row < rows; row++)
     {
         printf("|  ");
         for (int col = 0; col < cols; col++)
         {
             printf("%.2f  ", matrix[row][col]);
-            for (int i = 0; i < max_spaces - (3 + scale_to_below_10(matrix[row][col])); i++)
+            int cal_spaces = 3 + scale_to_below_10(matrix[row][col]); // add three for 3 characters representing the floating point and 2 decimal places
+            if (matrix[row][col] < 0) cal_spaces++; // check for negative sign add one if true
+            for (int i = 0; i < max_spaces - cal_spaces; i++)
             {
-                // add three for 3 characters representing the floating point and 2 decimal places
                 printf(" ");
             }
         }
@@ -254,7 +318,7 @@ float scalar_divid(float scalar, float idx_value)
     return idx_value / scalar;
 }
 
-float get_determinater(float matrix[][MAX_SIZE], int size)
+float get_determinant(float matrix[][MAX_SIZE], int size)
 {
 
     float det = 0.0;
@@ -288,7 +352,7 @@ float get_determinater(float matrix[][MAX_SIZE], int size)
             next_row++;
         }
         float sign = pow(-1, (double)(selected_row + selected_col));
-        det += sign * matrix[selected_row][selected_col] * get_determinater(matrix_t, size-1);
+        det += sign * matrix[selected_row][selected_col] * get_determinant(matrix_t, size-1);
     }
 
     return det;
@@ -296,7 +360,7 @@ float get_determinater(float matrix[][MAX_SIZE], int size)
 
 void invert(float matrix[][MAX_SIZE], float inverse_matrix[][MAX_SIZE], int size)
 {
-    float determinent = get_determinater(matrix, size);
+    float determinent = get_determinant(matrix, size);
     float cofactor_matrix[MAX_SIZE][MAX_SIZE];
     float transposed_cofactor_matrix[MAX_SIZE][MAX_SIZE];
 
@@ -346,7 +410,7 @@ void get_cofactor_matrix(float matrix[][MAX_SIZE], float cofactor_matrix[][MAX_S
 
             }
             if (size > 2) {
-                cofactor_matrix[i][j] = matrix[i][j] * get_determinater(matrix, size) * pow(-1, i + j);
+                cofactor_matrix[i][j] = matrix[i][j] * get_determinant(matrix, size) * pow(-1, i + j);
             }
 
         }
@@ -364,6 +428,21 @@ void get_transpose(float matrix[][MAX_SIZE], float transpose_matrix[][MAX_SIZE],
 
 int main()
 {
+
+    printf("\nMATRIX CALCULATOR v1.0.0\n");
+    printf("\ninitializing tests...");
+    CU_initialize_registry();
+    CU_pSuite suite = CU_add_suite("AddTestSuite", 0, 0);
+    CU_add_test(suite, "test of add()", test_add);
+    CU_add_test(suite, "test of subtract()", test_subtract);
+    CU_add_test(suite, "test of multiply()", test_multiply);
+    CU_add_test(suite, "test of get_determinant()", test_get_determinant);
+    CU_basic_set_mode(CU_BRM_VERBOSE);
+    CU_basic_run_tests();
+    CU_cleanup_registry();
+
+    printf("\n");
+
     float matrices[MAX_MATRICES][MAX_SIZE][MAX_SIZE], answer_matrices[MAX_MATRICES][MAX_SIZE][MAX_SIZE];
     int matrices_n = 0, rows[MAX_MATRICES], cols[MAX_MATRICES];
     int operation;
@@ -429,16 +508,16 @@ int main()
 
             if (i == 0)
             {
-                calculate(matrices[i], matrices[i + 1], answer_matrices[i], dimension, *add);
+                calculate(matrices[i], matrices[i + 1], answer_matrices[i], col_c, &add);
             }
             else
             {
-                calculate(answer_matrices[i - 1], matrices[i + 1], answer_matrices[i], dimension, *add);
+                calculate(answer_matrices[i - 1], matrices[i + 1], answer_matrices[i], col_c, &add);
             }
         }
 
         printf("\nAnswer: ");
-        print_matrix(answer_matrices[matrices_n - 2], dimension, dimension);
+        print_matrix(answer_matrices[matrices_n - 2], col_c, col_c);
         break;
     }
 
@@ -459,16 +538,16 @@ int main()
 
             if (j == 0)
             {
-                calculate(matrices[j], matrices[j + 1], answer_matrices[j], dimension, *subtract);
+                calculate(matrices[j], matrices[j + 1], answer_matrices[j], col_c, &subtract);
             }
             else
             {
-                calculate(answer_matrices[j - 1], matrices[j + 1], answer_matrices[j], dimension, *subtract);
+                calculate(answer_matrices[j - 1], matrices[j + 1], answer_matrices[j], col_c, &subtract);
             }
         }
 
         printf("\nAnswer: ");
-        print_matrix(answer_matrices[matrices_n - 2], dimension, dimension);
+        print_matrix(answer_matrices[matrices_n - 2], col_c, col_c);
         break;
     }
 
@@ -547,7 +626,7 @@ int main()
 
     case DETERMINENT:
     {
-        printf("\nDeterminent value: %.2f", get_determinater(matrices[0], rows[0]));
+        printf("\nDeterminent value: %.2f", get_determinant(matrices[0], rows[0]));
     }
 
     case ADJOINT:
@@ -583,6 +662,18 @@ int main()
         print_matrix(inverse_matrix, rows[0], cols[0]);
         break;
     }
+
+    case TRANSPOSE:
+        float transpose_matrix[MAX_SIZE][MAX_SIZE];
+
+        if(rows[0] != cols[0]) {
+                printf("\n(!) Inverse can be calculated only for squre matrices");
+                return -1;
+        }
+        get_transpose(matrices[0], transpose_matrix, rows[0]);
+        printf("\nAnswer: ");
+        print_matrix(transpose_matrix, rows[0], cols[0]);
+        break;
     }
 
     printf("\n");
